@@ -1,3 +1,4 @@
+
 %Project Name : Calculating Resistance Vlaue based on Color Bands
 %Team : X-ohm
 %-------------
@@ -196,7 +197,8 @@ close all;
     imshow(color_bands(:,:,:,3), []);
     caption = sprintf('(Mask on color band 3)');
 	title(caption, 'FontSize', fontSize);
-     %********************SECTION (3)*********************
+    %%
+    %********************SECTION (3)*********************
     %>>>>>>>>>>>>Color Detection of each band<<<<<<<<<<<<
     for i = 1 : 3
         %use the centroid to crop a small rectangle containing the color
@@ -238,60 +240,168 @@ close all;
     colors(1) = std_colors_code_names(1,N(1));
     colors(2) = std_colors_code_names(1,N(2));
     colors(3) = std_colors_code_names(1,N(3));
-    return
+    %%
+    %**************SECTION (4)*******************
+    %>>>>>>>>>Detect the order of bands<<<<<<<<<<
     
-    function [mask] = DrawFreehandRegion(handleToImage, rgbImage)
-try
-	fontSize = 14;
-	% Open a temporary full-screen figure if requested.
-	enlargeForDrawing = true;
-	axes(handleToImage);
-	if enlargeForDrawing
-		hImage = findobj(gca,'Type','image');
-		numberOfImagesInside = length(hImage);
-		if numberOfImagesInside > 1
-			imageInside = get(hImage(1), 'CData');
-		else
-			imageInside = get(hImage, 'CData');
-		end
-		hTemp = figure;
-		hImage2 = imshow(imageInside, []);
-		[rows columns NumberOfColorBands] = size(imageInside);
-		set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+    %based on the value of X-coordinates in Centroids of bands , we order
+    %the colors to be ready for Calculation 
+    if ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
+    else
+        if X_centroids(1,1) < X_centroids(1,2)
+            if X_centroids(1,1) > X_centroids(1,3)
+                swap = colors(3);
+                colors(3) = colors(2);
+                colors(2) = swap ;
+                swap = colors(2);
+                colors(2) = colors(1);
+                colors(1) = swap ; 
+            elseif X_centroids(1,2) > X_centroids(1,3)
+                swap = colors(3);
+                colors(3) = colors(1);
+                colors(1) = swap ;
+            end 
+            
+        else
+            if X_centroids(1,1) > X_centroids(1,3)
+                if X_centroids(1,2) > X_centroids(1,3)
+                    swap = colors(3);
+                    colors(3) = colors(1);
+                    colors(1) = swap ;
+                else
+                    swap = colors(3);
+                    colors(3) = colors(1);
+                    colors(1) = swap ;
+                    swap = colors(2);
+                    colors(2) = colors(1);
+                    colors(1) = swap ;
+                end
+            else
+                swap = colors(2);
+                colors(2) = colors(1);
+                colors(1) = swap ;
+            end
+        
+        end
     end
+    if X_centroids(1,2) > X_centroids(1,3) && ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
+        swap = colors(2);
+        colors(2) = colors(3);
+        colors(3) = swap ;
+    end
+    colors
+    %%
+    %***************************SECTION (5)****************************
+    %>>>>>Calculate Resistance Value based on colors and its order<<<<<
     
-	
-	message = sprintf('Left click and hold to begin drawing.\nSimply lift the mouse button to finish\nDO NOT INCLUDE TOLERANCE BAND');
-	text(10, 40, message, 'color', 'r', 'FontSize', fontSize);
-    % Prompt user to draw a region on the image.
-	uiwait(msgbox(message));
-	
-	% Now, finally, have the user freehand draw the mask in the image.
-	hFH = imfreehand();
-	% Once we get here, the user has finished drawing the region.
-	% Create a binary image ("mask") from the ROI object.
-	mask = hFH.createMask();
-	
-	% Close the maximized figure because we're done with it.
-	close(hTemp);
-	% Display the freehand mask.
-	subplot(3, 4, 5);
-	imshow(mask);
-	title('Binary mask of the region', 'FontSize', fontSize);
-	
-	% Mask the image.
-	maskedRgbImage = bsxfun(@times, rgbImage, cast(mask,class(rgbImage)));
-	% Display it.
-	subplot(3, 4, 6);
-	imshow(maskedRgbImage);
-catch ME
-	errorMessage = sprintf('Error running DrawFreehandRegion:\n\n\nThe error message is:\n%s', ...
-		ME.message);
-	WarnUser(errorMessage);
-end
-    return
+    % Initialize and save resistor value
+    value1='0';
+    value2='0';
+    value3='0';
+    value4='0';
+
+    switch colors(1)
+        case 'black'
+            value1='0';
+        case 'brown'
+            value1='1';
+        case 'red'
+            value1='2';
+        case 'orange'
+            value1='3';
+        case 'yellow'
+            value1='4';
+        case 'green'
+            value1='5';
+        case 'blue'
+            value1='6';
+        case 'violet'
+            value1='7';
+        case 'grey'
+            value1='8';
+        case 'white'
+            value1='9';
+    end
+%------
+    switch colors(2)
+        case 'black'
+            value2='0';
+        case 'brown'
+            value2='1';
+        case 'red'
+            value2='2';
+        case 'orange'
+            value2='3';
+        case 'yellow'
+            value2='4';
+        case 'green'
+            value2='5';
+        case 'blue'
+            value2='6';
+        case 'violet'
+            value2='7';
+        case 'grey'
+            value2='8';
+        case 'white'
+            value2='9';
+    end
+%------
+    switch colors(3)
+         case 'black'
+            value3=1;
+         case 'brown'
+            value3=10;
+        case 'red'
+            value3=100;
+        case 'orange'
+            value3=1000;
+        case 'yellow'
+            value3=10000;
+        case 'green'
+            value3=100000;
+        case 'blue'
+            value3=1000000;
+        case 'violet'
+            value3=10000000;
+        case 'grey'
+            value3=100000000;
+        case 'white'
+            value3=1000000000;
+    end
+
+%------
+    value1 = strcat(value1,value2);
+    value1 = str2num(value1);
+    res = value1 * value3;
+    val1 = fix(value1/10);
+    bs1 = num2str(val1);
+    bs2 =value2;
+
+    switch value3
+        case 1e2
+            b_str = [bs1 '.' bs2 ' K'];
+        case 1e3
+            b_str = [bs1 bs2 ' K'];
+        case 1e4
+            b_str = [bs1 bs2 '0 K'];        
+        case 1e5
+            b_str = [bs1 '.' bs2 ' M'];
+        case 1e6
+            b_str = [bs1 bs2 ' M'];
+        case 1e7
+            b_str = [bs1 bs2 '0 M'];
+        case 1e8
+            b_str = [bs1 '.' bs2 ' G'];
+        case 1e9
+            b_str = [bs1 bs2 ' G'];
+    end 
     
-    function [mask] = DrawFreehandRegion(handleToImage, rgbImage)
+    Resistance_Value = b_str
+    
+%%
+return
+
+function [mask] = DrawFreehandRegion(handleToImage, rgbImage)
 try
 	fontSize = 14;
 	% Open a temporary full-screen figure if requested.
@@ -355,55 +465,4 @@ catch ME
 		ME.message);
 	WarnUser(errorMessage);
 end
-%%
-    %**************SECTION (4)*******************
-    %>>>>>>>>>Detect the order of bands<<<<<<<<<<
-    
-    %based on the value of X-coordinates in Centroids of bands , we order
-    %the colors to be ready for Calculation 
-    if ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
-    else
-        if X_centroids(1,1) < X_centroids(1,2)
-            if X_centroids(1,1) > X_centroids(1,3)
-                swap = colors(3);
-                colors(3) = colors(2);
-                colors(2) = swap ;
-                swap = colors(2);
-                colors(2) = colors(1);
-                colors(1) = swap ; 
-            elseif X_centroids(1,2) > X_centroids(1,3)
-                swap = colors(3);
-                colors(3) = colors(1);
-                colors(1) = swap ;
-            end 
-            
-        else
-            if X_centroids(1,1) > X_centroids(1,3)
-                if X_centroids(1,2) > X_centroids(1,3)
-                    swap = colors(3);
-                    colors(3) = colors(1);
-                    colors(1) = swap ;
-                else
-                    swap = colors(3);
-                    colors(3) = colors(1);
-                    colors(1) = swap ;
-                    swap = colors(2);
-                    colors(2) = colors(1);
-                    colors(1) = swap ;
-                end
-            else
-                swap = colors(2);
-                colors(2) = colors(1);
-                colors(1) = swap ;
-            end
-        
-        end
-    end
-    if X_centroids(1,2) > X_centroids(1,3) && ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
-        swap = colors(2);
-        colors(2) = colors(3);
-        colors(3) = swap ;
-    end
-    colors
-    %%
 return; % from GetMeanLABValues
