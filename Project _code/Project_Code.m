@@ -196,7 +196,99 @@ close all;
     imshow(color_bands(:,:,:,3), []);
     caption = sprintf('(Mask on color band 3)');
 	title(caption, 'FontSize', fontSize);
+     %********************SECTION (3)*********************
+    %>>>>>>>>>>>>Color Detection of each band<<<<<<<<<<<<
+    for i = 1 : 3
+        %use the centroid to crop a small rectangle containing the color
+        xMin = centers(i).Centroid(1,1) - floor(height/2);
+        yMin = centers(i).Centroid(1,2) - floor(width/2);
+        X_centroids(1,i) = centers(i).Centroid(1,1) ;
+        croppedRgb = imcrop(color_bands(:,:,:,i) , [xMin, yMin, width, height]);
+        subplot(3, 4, 9+i);
+        imshow(croppedRgb, []);
+        %convert to HSV color-space , we do so because it is less sensitive
+        %to changes in illumination 
+        croppedHSV = rgb2hsv(croppedRgb);
+        %calculate mean value in each small colored rectangle to obtain
+        %single H S V value of the color
+        m = mean(croppedHSV);
+        color = mean(m , 2);
+        %compare each color with standard ten colors saved in
+        %'std_colors_code_HSV' matrix , we calculate the square root of
+        %(differnce in H and S)squared and save the value in (3*10 compare
+        %matrix) each row contains the difference value for each color with
+        %the 10 colors
+        if color(3) >= 0 && color(3) <= 0.07
+            comp(i,1) = 0
+        else
+            for j = 1 : 10
+                comp(i,j) = sqrt(((std_colors_code_HSV(j,1) - color(1)).^2) + ((std_colors_code_HSV(j,2) - color(2)).^2));
+            end
+        end
+    end
+    %-----
+    %extract min. value in each raw in compare matrix which indicates the
+    %closest color within the standard 10 colors used in resistance value
+    %calculation , and index of min value will be used to determine color
+    %name from (std_colors_code_names) matrix .
+    X_centroids
+    [M , N] = min(comp,[],2);          %this return min value in each raw and column number
     
+    %save the color names in (colors 1*3 matrix) by accessing (std_colors_code_names) matrix using the index of min value in comp matrix 
+    colors(1) = std_colors_code_names(1,N(1));
+    colors(2) = std_colors_code_names(1,N(2));
+    colors(3) = std_colors_code_names(1,N(3));
+    return
+    
+    function [mask] = DrawFreehandRegion(handleToImage, rgbImage)
+try
+	fontSize = 14;
+	% Open a temporary full-screen figure if requested.
+	enlargeForDrawing = true;
+	axes(handleToImage);
+	if enlargeForDrawing
+		hImage = findobj(gca,'Type','image');
+		numberOfImagesInside = length(hImage);
+		if numberOfImagesInside > 1
+			imageInside = get(hImage(1), 'CData');
+		else
+			imageInside = get(hImage, 'CData');
+		end
+		hTemp = figure;
+		hImage2 = imshow(imageInside, []);
+		[rows columns NumberOfColorBands] = size(imageInside);
+		set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+    end
+    
+	
+	message = sprintf('Left click and hold to begin drawing.\nSimply lift the mouse button to finish\nDO NOT INCLUDE TOLERANCE BAND');
+	text(10, 40, message, 'color', 'r', 'FontSize', fontSize);
+    % Prompt user to draw a region on the image.
+	uiwait(msgbox(message));
+	
+	% Now, finally, have the user freehand draw the mask in the image.
+	hFH = imfreehand();
+	% Once we get here, the user has finished drawing the region.
+	% Create a binary image ("mask") from the ROI object.
+	mask = hFH.createMask();
+	
+	% Close the maximized figure because we're done with it.
+	close(hTemp);
+	% Display the freehand mask.
+	subplot(3, 4, 5);
+	imshow(mask);
+	title('Binary mask of the region', 'FontSize', fontSize);
+	
+	% Mask the image.
+	maskedRgbImage = bsxfun(@times, rgbImage, cast(mask,class(rgbImage)));
+	% Display it.
+	subplot(3, 4, 6);
+	imshow(maskedRgbImage);
+catch ME
+	errorMessage = sprintf('Error running DrawFreehandRegion:\n\n\nThe error message is:\n%s', ...
+		ME.message);
+	WarnUser(errorMessage);
+end
     return
     
     function [mask] = DrawFreehandRegion(handleToImage, rgbImage)
