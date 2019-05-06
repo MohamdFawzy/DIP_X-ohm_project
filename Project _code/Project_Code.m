@@ -355,4 +355,55 @@ catch ME
 		ME.message);
 	WarnUser(errorMessage);
 end
+%%
+    %**************SECTION (4)*******************
+    %>>>>>>>>>Detect the order of bands<<<<<<<<<<
+    
+    %based on the value of X-coordinates in Centroids of bands , we order
+    %the colors to be ready for Calculation 
+    if ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
+    else
+        if X_centroids(1,1) < X_centroids(1,2)
+            if X_centroids(1,1) > X_centroids(1,3)
+                swap = colors(3);
+                colors(3) = colors(2);
+                colors(2) = swap ;
+                swap = colors(2);
+                colors(2) = colors(1);
+                colors(1) = swap ; 
+            elseif X_centroids(1,2) > X_centroids(1,3)
+                swap = colors(3);
+                colors(3) = colors(1);
+                colors(1) = swap ;
+            end 
+            
+        else
+            if X_centroids(1,1) > X_centroids(1,3)
+                if X_centroids(1,2) > X_centroids(1,3)
+                    swap = colors(3);
+                    colors(3) = colors(1);
+                    colors(1) = swap ;
+                else
+                    swap = colors(3);
+                    colors(3) = colors(1);
+                    colors(1) = swap ;
+                    swap = colors(2);
+                    colors(2) = colors(1);
+                    colors(1) = swap ;
+                end
+            else
+                swap = colors(2);
+                colors(2) = colors(1);
+                colors(1) = swap ;
+            end
+        
+        end
+    end
+    if X_centroids(1,2) > X_centroids(1,3) && ((X_centroids(1,1) < X_centroids(1,2)) && X_centroids(1,1) < X_centroids(1,3))
+        swap = colors(2);
+        colors(2) = colors(3);
+        colors(3) = swap ;
+    end
+    colors
+    %%
 return; % from GetMeanLABValues
